@@ -22,10 +22,75 @@
           - 192.168.0.0 255.255.0.0
       register: output
 
-    - name: "TASK 3: Print output of show interfaces"
-      debug:
-        msg: "{{ output.stdout_lines.0 }}"
+    - name: "TASK 2: Set External DNS/NTP Providers Object Group"
+      asa_og:
+        name: EXTERNAL_DNS_NTP
+        group_type: network-object
+        state: present
+        description: External DNS Providers (CloudFlare, Google, Quad9, Umbrella)
+        host_ip:
+          - 1.1.1.1
+          - 8.8.8.8
+          - 9.9.9.9
+          - 208.67.222.222
+          - 208.67.220.220
+      register: output2
 
-    - name: "TASK 3: Print output of pinging Google DNS"
+    - name: "TASK 3: Add Port Group"
+      asa_og:
+        name: SVC_OBJ_DNS_NTP
+        group_type: port-object
+        state: present
+        description: DNS and NTP ports
+        protocol: udp
+        port_eq:
+          - "ntp"
+          - "dnsix"
+          - "5353"
+          - "553"
+          - "353"
+      register: output3
+
+    - name: "TASK 4: Remove Extra Group"
+      asa_og:
+        name: DNS_ONLY
+        group_type: port-object
+        state: absent
+        protocol: udp
+        port_eq:
+          - domain
+      register: output4
+
+    - name: "TASK 5: Fix the DNS Port Group"
+      asa_og:
+        name: SVC_OBJ_DNS_NTP
+        group_type: port-object
+        state: replace
+        description: DNS and NTP ports
+        protocol: udp
+        port_eq:
+          - "domain"
+          - "ntp"
+      register: output5
+
+    - name: "DEBUG 1: Print output of RFC1918 Object Group"
       debug:
-        msg: "{{ output.stdout_lines.1 }}"
+        msg: "{{ output }}"
+
+    - name: "DEBUG 2: Print output of External DNS Group"
+      debug:
+        msg: "{{ output2 }}"
+
+    - name: "DEBUG 3: Print output of adding Port Group"
+      debug:
+        msg: "{{ output3 }}"
+
+    - name: "DEBUG 4: Print output of removing extra Port Group"
+      debug:
+        msg: "{{ output4 }}"
+
+    - name: "DEBUG 5: Print output of Port Group Replace"
+      debug:
+        msg: "{{ output5 }}"
+
+...
