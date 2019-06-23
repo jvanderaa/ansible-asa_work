@@ -1,0 +1,26 @@
+---
+# yamllint disable rule:truthy
+# yamllint disable rule:line-length
+- name: ASA Command Output
+  connection: network_cli
+  hosts: asa_firewalls
+  gather_facts: no
+  become: yes
+  become_method: enable
+
+  tasks:
+
+    - name: "TASK 1: Read output from ASA"
+      asa_command:
+        commands:
+          - show int ip brief
+          - ping 8.8.8.8
+      register: output
+
+    - name: "TASK 2: Print output of show interfaces"
+      debug:
+        msg: "{{ output.stdout_lines.0 }}"
+
+    - name: "TASK 3: Print output of pinging Google DNS"
+      debug:
+        msg: "{{ output.stdout_lines.1 }}"
